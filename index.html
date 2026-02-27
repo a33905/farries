@@ -6,7 +6,7 @@
     <title>仙女的聲音</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 防止選取與觸控預設行為 */
+        /* 防止選取與觸控預設行為，優化行動裝置體驗 */
         * {
             -webkit-user-select: none;
             user-select: none;
@@ -41,7 +41,7 @@
 <body class="bg-slate-900 text-slate-200 fixed inset-0 flex flex-col items-center justify-center p-6 overflow-hidden touch-none">
 
     <div id="app" class="max-w-md w-full text-center space-y-8">
-        <!-- 標題區 -->
+        <!-- 標題與狀態區 -->
         <div class="space-y-4">
             <h1 class="text-3xl font-black tracking-[0.2em] text-white flex items-center justify-center gap-3">
                 <span class="text-purple-400">✨</span>
@@ -53,19 +53,19 @@
             </div>
         </div>
 
-        <!-- 選項網格 -->
+        <!-- 聲音選項網格 (3x2 佈局) -->
         <div id="options-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full">
-            <!-- 由 JS 動態生成 -->
+            <!-- 由 JavaScript 動態生成按鈕 -->
         </div>
 
-        <!-- 底部確認按鈕 -->
+        <!-- 操作按鈕 -->
         <button id="verify-btn" class="w-full py-6 rounded-3xl bg-gradient-to-r from-purple-700 to-indigo-700 text-white font-black text-xl tracking-[0.3em] shadow-2xl active:scale-95 disabled:opacity-50 transition-all">
             確 定 答 案
         </button>
     </div>
 
     <script>
-        // 設定本地相對路徑檔案
+        // 本地音檔路徑配置
         const AUDIO_FILES = {
             '1': '1.mp3',
             '2': '2.mp3',
@@ -85,6 +85,7 @@
         let options = [];
         let targetId = null;
         let selectedId = null;
+        let selectedAudioKey = null; 
         let status = 'idle';
         let currentAudio = null;
         let longPressTimer = null;
@@ -94,16 +95,19 @@
         const statusMsg = document.getElementById('status-message');
         const verifyBtn = document.getElementById('verify-btn');
 
+        // 初始化遊戲：洗牌並設定目標
         function shuffleGame() {
             options = [...FAIRIES_DATA].sort(() => Math.random() - 0.5);
             const target = options.find(f => f.audioKey === 'correct');
             targetId = target.id;
             selectedId = null;
+            selectedAudioKey = null;
             status = 'idle';
             updateStatus("聽聽看，哪一個才是正確的聲音？", "idle");
             renderGrid();
         }
 
+        // 更新 UI 狀態文字
         function updateStatus(msg, type) {
             statusMsg.innerText = msg;
             statusMsg.className = "transition-all py-3 px-8 rounded-2xl inline-block text-sm font-bold border shadow-lg ";
@@ -117,6 +121,7 @@
             }
         }
 
+        // 渲染選項網格
         function renderGrid() {
             grid.innerHTML = '';
             options.forEach((fairy, index) => {
@@ -127,6 +132,7 @@
                     isSelected ? 'bg-pink-900/40 border-pink-500 scale-105 shadow-[0_0_30px_rgba(236,72,153,0.3)]' : 'bg-slate-800 border-slate-700'
                 }`;
 
+                // 動態切換圖示：選中為愛心，未選中為音量
                 const icon = isSelected ? 
                     `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="currentColor" class="text-pink-400 animate-heart"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>` :
                     `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
@@ -138,12 +144,14 @@
                     </div>
                 `;
 
+                // 處理長按選取邏輯
                 const handleStart = (e) => {
                     if (status === 'correct') return;
                     isLongPress = false;
                     longPressTimer = setTimeout(() => {
                         isLongPress = true;
                         selectedId = fairy.id;
+                        selectedAudioKey = fairy.audioKey;
                         updateStatus("已選取此聲音", "idle");
                         renderGrid();
                         if (navigator.vibrate) navigator.vibrate(50);
@@ -166,6 +174,7 @@
             });
         }
 
+        // 播放選中的音檔
         function playAudio(key) {
             if (currentAudio) {
                 currentAudio.pause();
@@ -174,10 +183,11 @@
             const url = AUDIO_FILES[key];
             if (url) {
                 currentAudio = new Audio(url);
-                currentAudio.play().catch(err => console.warn("播放受阻"));
+                currentAudio.play().catch(err => console.warn("播放受阻，請確保已有使用者互動。"));
             }
         }
 
+        // 驗證答案
         verifyBtn.addEventListener('click', () => {
             if (status === 'correct') return;
             if (!selectedId) {
@@ -191,13 +201,16 @@
                 verifyBtn.innerText = "驗 證 通 過";
                 verifyBtn.classList.add('bg-green-600');
                 
-                // 1秒後跳轉至新頁面
+                // 跳轉至成功頁面
                 setTimeout(() => {
                     window.location.href = 'correct.html';
                 }, 1000);
             } else {
-                updateStatus("不對噢！重新洗牌...", "wrong");
-                setTimeout(() => shuffleGame(), 1500);
+                updateStatus("不對噢！即將前往失敗頁面...", "wrong");
+                // 跳轉至失敗頁面，傳遞選錯的 ID 以供播放
+                setTimeout(() => {
+                    window.location.href = `wrong.html?id=${selectedAudioKey}`;
+                }, 1000);
             }
         });
 
