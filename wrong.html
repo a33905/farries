@@ -64,7 +64,8 @@
         
         // 2. 按鈕點擊播放用的音檔：從 "1_wrong" 提取出 "1"，變成 "1.mp3"
         const originalId = rawIdParam.replace('_wrong', '');
-        const originalAudio = new Audio(originalId + '.mp3');
+        //const originalAudio = new Audio(originalId + '.mp3');
+        const originalAudio = wrongAudio;
         
         const replayBtn = document.getElementById('replay-btn');
         const playIcon = document.getElementById('play-icon');
