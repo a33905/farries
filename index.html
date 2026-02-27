@@ -49,7 +49,7 @@
 </head>
 <body class="bg-slate-900 text-slate-200 fixed inset-0 flex flex-col items-center justify-center p-6 overflow-hidden touch-none">
 
-    <div id="app" class="max-w-md w-full text-center space-y-10">
+    <div id="app" class="max-w-md w-full text-center space-y-8">
         <!-- 標題區 -->
         <div class="space-y-4">
             <h1 class="text-3xl font-black tracking-[0.2em] text-white flex items-center justify-center gap-3">
@@ -62,8 +62,8 @@
             </div>
         </div>
 
-        <!-- 選項矩陣 -->
-        <div id="options-grid" class="grid grid-cols-2 gap-6 w-full aspect-square">
+        <!-- 選項網格 (改為 3 欄或彈性排列以容納 5 個選項) -->
+        <div id="options-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full">
             <!-- 由 JS 動態生成 -->
         </div>
 
@@ -79,11 +79,12 @@
     </div>
 
     <script>
-        // 設定本地相對路徑檔案
+        // 設定本地相對路徑檔案，新增了 4.mp3
         const AUDIO_FILES = {
             '1': '1.mp3',
             '2': '2.mp3',
             '3': '3.mp3',
+            '4': '4.mp3',
             'correct': 'correct.mp3'
         };
 
@@ -91,7 +92,8 @@
             { id: 'f1', audioKey: '1' },
             { id: 'f2', audioKey: '2' },
             { id: 'f3', audioKey: '3' },
-            { id: 'f4', audioKey: 'correct' }
+            { id: 'f4', audioKey: '4' },
+            { id: 'f5', audioKey: 'correct' }
         ];
 
         let options = [];
@@ -133,17 +135,18 @@
 
         function renderGrid() {
             grid.innerHTML = '';
+            // 如果選項變多，微調格子的 padding 和大小
             options.forEach((fairy, index) => {
                 const btn = document.createElement('button');
                 const isSelected = selectedId === fairy.id;
                 
-                btn.className = `relative flex items-center justify-center rounded-[2.5rem] transition-all duration-500 border-2 outline-none ${
-                    isSelected ? 'bg-pink-900/40 border-pink-500 scale-105 shadow-[0_0_40px_rgba(236,72,153,0.3)]' : 'bg-slate-800 border-slate-700'
+                btn.className = `relative flex items-center justify-center rounded-[2rem] py-6 transition-all duration-500 border-2 outline-none ${
+                    isSelected ? 'bg-pink-900/40 border-pink-500 scale-105 shadow-[0_0_30px_rgba(236,72,153,0.3)]' : 'bg-slate-800 border-slate-700'
                 }`;
 
                 const icon = isSelected ? 
-                    `<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="currentColor" class="text-pink-400 animate-heart"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>` :
-                    `<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
+                    `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="currentColor" class="text-pink-400 animate-heart"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>` :
+                    `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
 
                 btn.innerHTML = `
                     <div class="flex flex-col items-center gap-2">
@@ -212,9 +215,8 @@
                 
                 timerContainer.classList.remove('hidden');
                 timerBar.classList.add('animate-timer');
-                
+
                 setTimeout(() => {
-                    //updateStatus("感謝遊玩，即將關閉...", "correct");
                     shuffleGame();
                 }, 10000);
             } else {
