@@ -160,7 +160,8 @@
 
                 const handleEnd = (e) => {
                     clearTimeout(longPressTimer);
-                    if (!isLongPress && status !== 'correct') {
+                    // 修改處：無論是否為長按，選中後點擊依然播放聲音
+                    if (status !== 'correct') {
                         playAudio(fairy.audioKey);
                     }
                 };
