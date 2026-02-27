@@ -204,13 +204,13 @@
                 // 跳轉至成功頁面
                 setTimeout(() => {
                     window.location.href = 'correct.html';
-                }, 1000);
+                }, 10);
             } else {
                 updateStatus("不對噢！即將前往失敗頁面...", "wrong");
                 // 跳轉至失敗頁面，傳遞選錯的音檔 ID，檔名格式改為 ID_wrong.mp3
                 setTimeout(() => {
                     window.location.href = `wrong.html?id=${selectedAudioKey}_wrong`;
-                }, 1000);
+                }, 10);
             }
         });
 
