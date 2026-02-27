@@ -54,7 +54,7 @@
         </div>
     </div>
 
-<script>
+    <script>
         // 解析 URL 參數 (例如 index 傳過來的是 id=1_wrong)
         const urlParams = new URLSearchParams(window.location.search);
         const rawIdParam = urlParams.get('id') || '1_wrong'; 
@@ -71,6 +71,7 @@
 
         /**
          * 更新按鈕圖示
+         * @param {boolean} isPlaying 是否正在播放
          */
         function updateIcon(isPlaying) {
             if (isPlaying) {
@@ -86,9 +87,17 @@
 
         // 當頁面載入完成後：自動播放「錯誤提示音」(1_wrong.mp3)
         window.onload = () => {
-            wrongAudio.play().catch(err => {
+            wrongAudio.play().then(() => {
+                // 自動播放成功時，將圖示改為暫停
+                updateIcon(true);
+            }).catch(err => {
                 console.log("自動播放錯誤提示音受阻。");
             });
+        };
+
+        // 監聽錯誤提示音播放結束，重置圖示
+        wrongAudio.onended = () => {
+            updateIcon(false);
         };
 
         // 按鈕點擊事件：播放「原始選擇音」(1.mp3)
