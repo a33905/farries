@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>再試一次 - 仙女的聲音</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        @keyframes subtle-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+        .animate-subtle {
+            animation: subtle-shake 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 min-h-screen flex flex-col items-center justify-center p-8 text-center">
+
+    <div class="space-y-10 max-w-md w-full">
+        <!-- 失敗訊息 -->
+        <div class="space-y-4">
+            <div class="inline-block p-4 bg-red-500/10 rounded-full mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+            </div>
+            <h1 class="text-4xl font-black text-white tracking-wider">
+                喔喔... 不是這個
+            </h1>
+            <p id="fail-desc" class="text-slate-500 tracking-widest font-light">剛才那個聲音聽起來不太對勁</p>
+        </div>
+
+        <!-- 播放剛才選錯的音檔按鈕 -->
+        <div class="py-6">
+            <p class="text-xs text-slate-600 uppercase tracking-[0.3em] mb-4">重新聆聽你選擇的聲音</p>
+            <button id="replay-btn" class="w-24 h-24 bg-slate-800 border border-slate-700 rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-all mx-auto">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" class="text-slate-400 ml-1">
+                    <path d="M5 3l14 9-14 9V3z"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- 返回按鈕 -->
+        <div class="pt-10">
+            <button onclick="window.location.href='index.html'" class="w-full py-5 rounded-2xl bg-slate-100 text-slate-900 font-bold text-lg tracking-widest shadow-lg active:scale-95 transition-all">
+                返回重新挑戰
+            </button>
+            <p class="mt-6 text-slate-600 text-sm">仙女正在重新打亂順序...</p>
+        </div>
+    </div>
+
+    <script>
+        // 解析網址參數 (例如 wrong.html?id=1)
+        const urlParams = new URLSearchParams(window.location.search);
+        const audioId = urlParams.get('id') || '1'; // 預設播放 1.mp3
+        
+        const audioPath = audioId + '.mp3';
+        const audio = new Audio(audioPath);
+        const replayBtn = document.getElementById('replay-btn');
+
+        // 自動播放 (部分瀏覽器可能因安全政策阻擋，需點擊)
+        window.onload = () => {
+            audio.play().catch(() => {
+                console.log("自動播放受阻，等待使用者點擊。");
+            });
+        };
+
+        replayBtn.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.currentTime = 0;
+                audio.play();
+                replayBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" class="text-pink-500">
+                        <rect x="6" y="4" width="4" height="16"></rect>
+                        <rect x="14" y="4" width="4" height="16"></rect>
+                    </svg>`;
+            } else {
+                audio.pause();
+                resetIcon();
+            }
+        });
+
+        audio.onended = resetIcon;
+
+        function resetIcon() {
+            replayBtn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" class="text-slate-400 ml-1">
+                    <path d="M5 3l14 9-14 9V3z"/>
+                </svg>`;
+        }
+    </script>
+</body>
+</html>
