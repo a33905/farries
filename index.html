@@ -212,9 +212,9 @@
                 
                 timerContainer.classList.remove('hidden');
                 timerBar.classList.add('animate-timer');
-
+                updateStatus("感謝遊玩，即將關閉...", "correct");
                 setTimeout(() => {
-                    updateStatus("感謝遊玩，即將關閉...", "correct");
+                    shuffleGame();
                 }, 10000);
             } else {
                 updateStatus("不對噢！重新洗牌...", "wrong");
