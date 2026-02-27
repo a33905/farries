@@ -14,11 +14,6 @@
             -webkit-tap-highlight-color: transparent;
         }
         
-        @keyframes timer {
-            from { transform: scaleX(1); }
-            to { transform: scaleX(0); }
-        }
-        
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-8px); }
@@ -28,10 +23,6 @@
         @keyframes pulse-heart {
             0%, 100% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.1); opacity: 0.8; }
-        }
-        
-        .animate-timer {
-            animation: timer 10s linear forwards;
         }
         
         .animate-shake {
@@ -62,7 +53,7 @@
             </div>
         </div>
 
-        <!-- 選項網格 (改為 3 欄或彈性排列以容納 5 個選項) -->
+        <!-- 選項網格 -->
         <div id="options-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full">
             <!-- 由 JS 動態生成 -->
         </div>
@@ -73,13 +64,8 @@
         </button>
     </div>
 
-    <!-- 倒數計時條 -->
-    <div id="timer-bar-container" class="fixed bottom-0 left-0 w-full h-1.5 bg-slate-800 hidden">
-        <div id="timer-bar" class="h-full bg-green-500 origin-left"></div>
-    </div>
-
     <script>
-        // 設定本地相對路徑檔案，新增了 4.mp3
+        // 設定本地相對路徑檔案
         const AUDIO_FILES = {
             '1': '1.mp3',
             '2': '2.mp3',
@@ -107,8 +93,6 @@
         const grid = document.getElementById('options-grid');
         const statusMsg = document.getElementById('status-message');
         const verifyBtn = document.getElementById('verify-btn');
-        const timerContainer = document.getElementById('timer-bar-container');
-        const timerBar = document.getElementById('timer-bar');
 
         function shuffleGame() {
             options = [...FAIRIES_DATA].sort(() => Math.random() - 0.5);
@@ -135,7 +119,6 @@
 
         function renderGrid() {
             grid.innerHTML = '';
-            // 如果選項變多，微調格子的 padding 和大小
             options.forEach((fairy, index) => {
                 const btn = document.createElement('button');
                 const isSelected = selectedId === fairy.id;
@@ -155,7 +138,6 @@
                     </div>
                 `;
 
-                // 事件處理
                 const handleStart = (e) => {
                     if (status === 'correct') return;
                     isLongPress = false;
@@ -179,7 +161,6 @@
                 btn.addEventListener('mouseup', handleEnd);
                 btn.addEventListener('touchstart', (e) => { e.preventDefault(); handleStart(e); }, {passive: false});
                 btn.addEventListener('touchend', (e) => { e.preventDefault(); handleEnd(e); }, {passive: false});
-                btn.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
 
                 grid.appendChild(btn);
             });
@@ -193,9 +174,7 @@
             const url = AUDIO_FILES[key];
             if (url) {
                 currentAudio = new Audio(url);
-                currentAudio.play().catch(err => {
-                    console.warn("播放失敗，請檢查檔案是否存在於正確路徑。");
-                });
+                currentAudio.play().catch(err => console.warn("播放受阻"));
             }
         }
 
@@ -208,22 +187,17 @@
 
             if (selectedId === targetId) {
                 status = 'correct';
-                updateStatus("正確！仙女祝福著你 ✨", "correct");
+                updateStatus("正確！即將進入驚喜頁面 ✨", "correct");
                 verifyBtn.innerText = "驗 證 通 過";
-                verifyBtn.classList.remove('bg-gradient-to-r', 'from-purple-700', 'to-indigo-700');
                 verifyBtn.classList.add('bg-green-600');
                 
-                timerContainer.classList.remove('hidden');
-                timerBar.classList.add('animate-timer');
-
+                // 1秒後跳轉至新頁面
                 setTimeout(() => {
-                    shuffleGame();
-                }, 10000);
+                    window.location.href = 'correct.html';
+                }, 1000);
             } else {
                 updateStatus("不對噢！重新洗牌...", "wrong");
-                setTimeout(() => {
-                    shuffleGame();
-                }, 1500);
+                setTimeout(() => shuffleGame(), 1500);
             }
         });
 
