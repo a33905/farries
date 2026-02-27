@@ -79,13 +79,12 @@
     </div>
 
     <script>
-        const getDriveUrl = (id) => `https://docs.google.com/uc?export=download&id=${id}`;
-
+        // 設定本地相對路徑檔案
         const AUDIO_FILES = {
-            '1': getDriveUrl('17d3iZ43Nv8G5IYf4eSKvR8mxb2Zmy8Qv'),
-            '2': getDriveUrl('1a4NhpAjjYdfP73gaYJdS3ZQH0vSSyRLm'),
-            '3': getDriveUrl('1cnnd1XhjJQNeHCA5S9C-kwMjeNiqoZ3M'),
-            'correct': getDriveUrl('1jtvNYBoustg1iMZBvdauUEcztm36ysRJ')
+            '1': '1.mp3',
+            '2': '2.mp3',
+            '3': '3.mp3',
+            'correct': 'correct.mp3'
         };
 
         const FAIRIES_DATA = [
@@ -192,7 +191,7 @@
             if (url) {
                 currentAudio = new Audio(url);
                 currentAudio.play().catch(err => {
-                    updateStatus("請點擊畫面後再播放", "idle");
+                    console.warn("播放失敗，請檢查檔案是否存在於正確路徑。");
                 });
             }
         }
