@@ -69,46 +69,53 @@
     </div>
 
     <script>
+        // 初始化音檔
         const audio = new Audio('correctans.mp3');
         const playBtn = document.getElementById('play-btn');
+        const playIcon = document.getElementById('play-icon');
 
-        // 當頁面載入完成後嘗試自動播放
+        /**
+         * 更新播放按鈕圖示
+         * @param {boolean} isPlaying 是否正在播放
+         */
+        function updateIcon(isPlaying) {
+            if (isPlaying) {
+                // 暫停圖示 (兩個垂直矩形)
+                playIcon.innerHTML = `
+                    <rect x="6" y="4" width="4" height="16"></rect>
+                    <rect x="14" y="4" width="4" height="16"></rect>`;
+                playIcon.classList.remove('ml-2');
+            } else {
+                // 播放圖示 (三角形)
+                playIcon.innerHTML = `<path d="M5 3l14 9-14 9V3z"/>`;
+                playIcon.classList.add('ml-2');
+            }
+        }
+
+        // 頁面載入完成後嘗試自動播放
         window.onload = () => {
-            // 注意：大多數行動裝置瀏覽器要求必須有使用者互動才能播放音訊
-            // 這裡嘗試播放，若失敗則等待使用者點擊按鈕
             audio.play().then(() => {
+                // 自動播放成功時，同步更新圖示為暫停
                 updateIcon(true);
             }).catch(err => {
                 console.log("自動播放受阻，等待使用者互動。");
             });
         };
-        
+
+        // 按鈕點擊事件：切換播放/暫停
         playBtn.addEventListener('click', () => {
             if (audio.paused) {
                 audio.play();
-                playBtn.innerHTML = `
-                    <div class="absolute inset-0 bg-pink-500 rounded-full animate-ping opacity-20"></div>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="currentColor" class="text-white">
-                        <rect x="6" y="4" width="4" height="16"></rect>
-                        <rect x="14" y="4" width="4" height="16"></rect>
-                    </svg>`;
+                updateIcon(true);
             } else {
                 audio.pause();
-                playBtn.innerHTML = `
-                    <div class="absolute inset-0 bg-pink-500 rounded-full animate-ping opacity-20"></div>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="currentColor" class="text-white ml-2">
-                        <path d="M5 3l14 9-14 9V3z"/>
-                    </svg>`;
+                updateIcon(false);
             }
         });
 
-        // 當音樂播放結束
+        // 當音檔播放結束時重置圖示
         audio.onended = () => {
-            playBtn.innerHTML = `
-                <div class="absolute inset-0 bg-pink-500 rounded-full animate-ping opacity-20"></div>
-                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="currentColor" class="text-white ml-2">
-                    <path d="M5 3l14 9-14 9V3z"/>
-                </svg>`;
+            updateIcon(false);
         };
     </script>
 </body>
