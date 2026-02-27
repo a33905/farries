@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>仙女的聲音</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 防止選取與觸控預設行為 */
+        * {
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        @keyframes timer {
+            from { transform: scaleX(1); }
+            to { transform: scaleX(0); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        @keyframes pulse-heart {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        .animate-timer {
+            animation: timer 10s linear forwards;
+        }
+        
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        .animate-heart {
+            animation: pulse-heart 1.2s ease-in-out infinite;
+        }
+
+        .touch-none {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-200 fixed inset-0 flex flex-col items-center justify-center p-6 overflow-hidden touch-none">
+
+    <div id="app" class="max-w-md w-full text-center space-y-10">
+        <!-- 標題區 -->
+        <div class="space-y-4">
+            <h1 class="text-3xl font-black tracking-[0.2em] text-white flex items-center justify-center gap-3">
+                <span class="text-purple-400">✨</span>
+                仙女的聲音
+                <span class="text-purple-400">✨</span>
+            </h1>
+            <div id="status-message" class="transition-all py-3 px-8 rounded-2xl inline-block text-sm font-bold border bg-slate-800 border-slate-700 text-slate-400 shadow-lg min-h-[3rem]">
+                聽聽看，哪一個才是正確的聲音？
+            </div>
+        </div>
+
+        <!-- 選項矩陣 -->
+        <div id="options-grid" class="grid grid-cols-2 gap-6 w-full aspect-square">
+            <!-- 由 JS 動態生成 -->
+        </div>
+
+        <!-- 底部確認按鈕 -->
+        <button id="verify-btn" class="w-full py-6 rounded-3xl bg-gradient-to-r from-purple-700 to-indigo-700 text-white font-black text-xl tracking-[0.3em] shadow-2xl active:scale-95 disabled:opacity-50 transition-all">
+            確 定 答 案
+        </button>
+    </div>
+
+    <!-- 倒數計時條 -->
+    <div id="timer-bar-container" class="fixed bottom-0 left-0 w-full h-1.5 bg-slate-800 hidden">
+        <div id="timer-bar" class="h-full bg-green-500 origin-left"></div>
+    </div>
+
+    <script>
+        const getDriveUrl = (id) => `https://docs.google.com/uc?export=download&id=${id}`;
+
+        const AUDIO_FILES = {
+            '1': getDriveUrl('17d3iZ43Nv8G5IYf4eSKvR8mxb2Zmy8Qv'),
+            '2': getDriveUrl('1a4NhpAjjYdfP73gaYJdS3ZQH0vSSyRLm'),
+            '3': getDriveUrl('1cnnd1XhjJQNeHCA5S9C-kwMjeNiqoZ3M'),
+            'correct': getDriveUrl('1jtvNYBoustg1iMZBvdauUEcztm36ysRJ')
+        };
+
+        const FAIRIES_DATA = [
+            { id: 'f1', audioKey: '1' },
+            { id: 'f2', audioKey: '2' },
+            { id: 'f3', audioKey: '3' },
+            { id: 'f4', audioKey: 'correct' }
+        ];
+
+        let options = [];
+        let targetId = null;
+        let selectedId = null;
+        let status = 'idle';
+        let currentAudio = null;
+        let longPressTimer = null;
+        let isLongPress = false;
+
+        const grid = document.getElementById('options-grid');
+        const statusMsg = document.getElementById('status-message');
+        const verifyBtn = document.getElementById('verify-btn');
+        const timerContainer = document.getElementById('timer-bar-container');
+        const timerBar = document.getElementById('timer-bar');
+
+        function shuffleGame() {
+            options = [...FAIRIES_DATA].sort(() => Math.random() - 0.5);
+            const target = options.find(f => f.audioKey === 'correct');
+            targetId = target.id;
+            selectedId = null;
+            status = 'idle';
+            updateStatus("聽聽看，哪一個才是正確的聲音？", "idle");
+            renderGrid();
+        }
+
+        function updateStatus(msg, type) {
+            statusMsg.innerText = msg;
+            statusMsg.className = "transition-all py-3 px-8 rounded-2xl inline-block text-sm font-bold border shadow-lg ";
+            
+            if (type === "correct") {
+                statusMsg.classList.add("bg-green-500/20", "text-green-400", "border-green-500");
+            } else if (type === "wrong") {
+                statusMsg.classList.add("bg-red-500/20", "text-red-400", "border-red-500", "animate-shake");
+            } else {
+                statusMsg.classList.add("bg-slate-800", "border-slate-700", "text-slate-400");
+            }
+        }
+
+        function renderGrid() {
+            grid.innerHTML = '';
+            options.forEach((fairy, index) => {
+                const btn = document.createElement('button');
+                const isSelected = selectedId === fairy.id;
+                
+                btn.className = `relative flex items-center justify-center rounded-[2.5rem] transition-all duration-500 border-2 outline-none ${
+                    isSelected ? 'bg-pink-900/40 border-pink-500 scale-105 shadow-[0_0_40px_rgba(236,72,153,0.3)]' : 'bg-slate-800 border-slate-700'
+                }`;
+
+                const icon = isSelected ? 
+                    `<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="currentColor" class="text-pink-400 animate-heart"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>` :
+                    `<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
+
+                btn.innerHTML = `
+                    <div class="flex flex-col items-center gap-2">
+                        ${icon}
+                        <span class="text-[10px] tracking-tighter text-slate-600 font-mono uppercase">SENS-0${index + 1}</span>
+                    </div>
+                `;
+
+                // 事件處理
+                const handleStart = (e) => {
+                    if (status === 'correct') return;
+                    isLongPress = false;
+                    longPressTimer = setTimeout(() => {
+                        isLongPress = true;
+                        selectedId = fairy.id;
+                        updateStatus("已選取此聲音", "idle");
+                        renderGrid();
+                        if (navigator.vibrate) navigator.vibrate(50);
+                    }, 600);
+                };
+
+                const handleEnd = (e) => {
+                    clearTimeout(longPressTimer);
+                    if (!isLongPress && status !== 'correct') {
+                        playAudio(fairy.audioKey);
+                    }
+                };
+
+                btn.addEventListener('mousedown', handleStart);
+                btn.addEventListener('mouseup', handleEnd);
+                btn.addEventListener('touchstart', (e) => { e.preventDefault(); handleStart(e); }, {passive: false});
+                btn.addEventListener('touchend', (e) => { e.preventDefault(); handleEnd(e); }, {passive: false});
+                btn.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
+
+                grid.appendChild(btn);
+            });
+        }
+
+        function playAudio(key) {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+            const url = AUDIO_FILES[key];
+            if (url) {
+                currentAudio = new Audio(url);
+                currentAudio.play().catch(err => {
+                    updateStatus("請點擊畫面後再播放", "idle");
+                });
+            }
+        }
+
+        verifyBtn.addEventListener('click', () => {
+            if (status === 'correct') return;
+            if (!selectedId) {
+                updateStatus("請先長按一個方塊進行選取", "idle");
+                return;
+            }
+
+            if (selectedId === targetId) {
+                status = 'correct';
+                updateStatus("正確！仙女祝福著你 ✨", "correct");
+                verifyBtn.innerText = "驗 證 通 過";
+                verifyBtn.classList.remove('bg-gradient-to-r', 'from-purple-700', 'to-indigo-700');
+                verifyBtn.classList.add('bg-green-600');
+                
+                timerContainer.classList.remove('hidden');
+                timerBar.classList.add('animate-timer');
+
+                setTimeout(() => {
+                    updateStatus("感謝遊玩，即將關閉...", "correct");
+                }, 10000);
+            } else {
+                updateStatus("不對噢！重新洗牌...", "wrong");
+                setTimeout(() => {
+                    shuffleGame();
+                }, 1500);
+            }
+        });
+
+        window.onload = shuffleGame;
+    </script>
+</body>
+</html>
