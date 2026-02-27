@@ -72,6 +72,17 @@
         const audio = new Audio('correctans.mp3');
         const playBtn = document.getElementById('play-btn');
 
+        // 當頁面載入完成後嘗試自動播放
+        window.onload = () => {
+            // 注意：大多數行動裝置瀏覽器要求必須有使用者互動才能播放音訊
+            // 這裡嘗試播放，若失敗則等待使用者點擊按鈕
+            audio.play().then(() => {
+                updateIcon(true);
+            }).catch(err => {
+                console.log("自動播放受阻，等待使用者互動。");
+            });
+        };
+        
         playBtn.addEventListener('click', () => {
             if (audio.paused) {
                 audio.play();
