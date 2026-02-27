@@ -54,45 +54,65 @@
         </div>
     </div>
 
-    <script>
-        // 解析網址參數 (例如 wrong.html?id=1)
+<script>
+        // 解析 URL 參數 (例如 index 傳過來的是 id=1_wrong)
         const urlParams = new URLSearchParams(window.location.search);
-        const audioId = urlParams.get('id') || '1'; // 預設播放 1.mp3
+        const rawIdParam = urlParams.get('id') || '1_wrong'; 
         
-        const audioPath = audioId + '.mp3';
-        const audio = new Audio(audioPath);
+        // 1. 自動播放用的音檔：例如 "1_wrong.mp3"
+        const wrongAudio = new Audio(rawIdParam + '.mp3');
+        
+        // 2. 按鈕點擊播放用的音檔：從 "1_wrong" 提取出 "1"，變成 "1.mp3"
+        const originalId = rawIdParam.replace('_wrong', '');
+        const originalAudio = new Audio(originalId + '.mp3');
+        
         const replayBtn = document.getElementById('replay-btn');
+        const playIcon = document.getElementById('play-icon');
 
-        // 自動播放 (部分瀏覽器可能因安全政策阻擋，需點擊)
+        /**
+         * 更新按鈕圖示
+         */
+        function updateIcon(isPlaying) {
+            if (isPlaying) {
+                playIcon.innerHTML = `
+                    <rect x="6" y="4" width="4" height="16"></rect>
+                    <rect x="14" y="4" width="4" height="16"></rect>`;
+                playIcon.classList.remove('ml-1');
+            } else {
+                playIcon.innerHTML = `<path d="M5 3l14 9-14 9V3z"/>`;
+                playIcon.classList.add('ml-1');
+            }
+        }
+
+        // 當頁面載入完成後：自動播放「錯誤提示音」(1_wrong.mp3)
         window.onload = () => {
-            audio.play().catch(() => {
-                console.log("自動播放受阻，等待使用者點擊。");
+            wrongAudio.play().catch(err => {
+                console.log("自動播放錯誤提示音受阻。");
             });
         };
 
+        // 按鈕點擊事件：播放「原始選擇音」(1.mp3)
         replayBtn.addEventListener('click', () => {
-            if (audio.paused) {
-                audio.currentTime = 0;
-                audio.play();
-                replayBtn.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" class="text-pink-500">
-                        <rect x="6" y="4" width="4" height="16"></rect>
-                        <rect x="14" y="4" width="4" height="16"></rect>
-                    </svg>`;
+            // 如果錯誤提示音還在播，先停掉
+            if (!wrongAudio.paused) {
+                wrongAudio.pause();
+                wrongAudio.currentTime = 0;
+            }
+
+            if (originalAudio.paused) {
+                originalAudio.currentTime = 0;
+                originalAudio.play();
+                updateIcon(true);
             } else {
-                audio.pause();
-                resetIcon();
+                originalAudio.pause();
+                updateIcon(false);
             }
         });
 
-        audio.onended = resetIcon;
-
-        function resetIcon() {
-            replayBtn.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" class="text-slate-400 ml-1">
-                    <path d="M5 3l14 9-14 9V3z"/>
-                </svg>`;
-        }
+        // 當原始選擇音播放結束時重置圖示
+        originalAudio.onended = () => {
+            updateIcon(false);
+        };
     </script>
 </body>
 </html>
